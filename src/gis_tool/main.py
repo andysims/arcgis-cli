@@ -12,20 +12,27 @@ def main():
     parser = argparse.ArgumentParser(description="GIS CLI Tool")
     subparsers = parser.add_subparsers(dest="command")
 
-    # Configure Command
-    conf_parser = parser.add_argument("configure", help="Saves credentials")
-    # conf_parser.add_argument(
-    #    "--profile", default="default", help="Profile name (e.g., portal, agol)"
-    # )
-    conf_parser.add_argument("--url", type=str, help="ArcGIS URL")
-    conf_parser.add_argument("--user", type=str, help="Username")
+    # --- FIX STARTS HERE ---
+    # Create a dedicated parser for the 'configure' command
+    conf_parser = subparsers.add_parser(
+        "configure",
+        help="Saves/Sets up credentials. You must provide both --url and --user.",
+    )
 
-    # Add Main Args
+    # Add arguments specifically to the 'configure' sub-command
+    conf_parser.add_argument(
+        "--url", type=str, required=True, help="ArcGIS or Enterprise/Portal URL"
+    )
+    conf_parser.add_argument(
+        "--user", type=str, required=True, help="Username for authentication"
+    )
+
+    # Add Main Args (These will be available globally)
     parser.add_argument(
         "--sys-env",
-        "--system-env",
-        "--system-environment",
+        dest="system_environment",  # Added dest to match your 'profile' line below
         type=str,
+        required=True,
         help="Specify system environment (e.g., portal, agol)",
     )
     parser.add_argument(
@@ -34,7 +41,7 @@ def main():
 
     args = parser.parse_args()
 
-    profile = (args.system_environment).strip().lower()
+    profile = args.system_environment.strip().lower()
 
     if args.command == "configure":
         log.info(f"Setting up login config file for {args.user} on {args.url}")
@@ -45,8 +52,9 @@ def main():
         log.info(f"Successfully saved credentials for profile: {profile}")
 
     # Grab creds
-    creds = get_credentials(profile=profile)
-    print(creds)
+    if not args.command == "configure":
+        creds = get_credentials(profile_name=profile)
+        print(creds)
 
 
 if __name__ == "__main__":
