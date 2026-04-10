@@ -9,37 +9,43 @@ log = logging.getLogger(f"gis_tool.{__name__}")
 
 
 def main():
-    parser = argparse.ArgumentParser(description="GIS CLI Tool")
+    # ==== Handles Credentials ====
+    # Create a parent parser (Global Args)
+    parent_parser = argparse.ArgumentParser(add_help=False)
+    parent_parser.add_argument(
+        "--sys-env",
+        dest="system_environment",
+        type=str,
+        required=False,
+        help="Specify system env: ArcGIS Online (agol) or Enterprise/Portal (portal) URL",
+    )
+
+    # Main parser
+    parser = argparse.ArgumentParser(
+        parents=[parent_parser], description="GIS CLI Tool"
+    )
     subparsers = parser.add_subparsers(dest="command")
 
-    # --- FIX STARTS HERE ---
-    # Create a dedicated parser for the 'configure' command
+    # Sub-command (for configuring)
     conf_parser = subparsers.add_parser(
         "configure",
-        help="Saves/Sets up credentials. You must provide both --url and --user.",
+        help="Saves/Sets up credentials.",
     )
+    conf_parser.add_argument("--url", type=str, required=True)
+    conf_parser.add_argument("--user", type=str, required=True)
 
-    # Add arguments specifically to the 'configure' sub-command
-    conf_parser.add_argument(
-        "--url", type=str, required=True, help="ArcGIS or Enterprise/Portal URL"
+    # Search parser
+    search_parser = subparsers.add_parser(
+        "search", help="Search the ArcGIS Online/Portal environment"
     )
-    conf_parser.add_argument(
-        "--user", type=str, required=True, help="Username for authentication"
-    )
-
-    # Add Main Args (These will be available globally)
-    parser.add_argument(
-        "--sys-env",
-        dest="system_environment",  # Added dest to match your 'profile' line below
-        type=str,
-        required=True,
-        help="Specify system environment (e.g., portal, agol)",
-    )
-    parser.add_argument(
-        "--search-user", type=str, help="Enter email or username to search for a user"
-    )
+    search_parser.add_argument("--user", help="User to search for")
+    search_parser.add_argument("--group", help="Group to search for")
 
     args = parser.parse_args()
+
+    # Enforce --sys-env req. after parse
+    if not args.system_environment:
+        parser.error("the following arguments are required: --sys-env")
 
     profile = args.system_environment.strip().lower()
 
