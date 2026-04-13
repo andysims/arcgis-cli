@@ -20,6 +20,9 @@ def main():
 
     profile = args.system_environment.strip().lower()
 
+    if args.command:
+        args.command = args.command.lower().strip()
+
     if args.command == "configure":
         log.info(f"Setting up login config file for {args.user} on {args.url}")
 
@@ -31,7 +34,12 @@ def main():
     # Grab creds
     if not args.command == "configure":
         creds = get_credentials(profile_name=profile)
-        print(creds)
+
+        print(creds)  # TODO: just for dev purposes; remove in prod
+
+    ## Handles Search
+    if args.command == "search":
+        user = user_search()
 
 
 if __name__ == "__main__":
